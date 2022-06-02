@@ -1,10 +1,5 @@
-/*
-* Alexa Scheduling Skill Template
-* Copyright (c) 2020 Dabble Lab - http://dabblelab.com
-* Portions Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-* SPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0
-* Licensed under the Amazon Software License  http://aws.amazon.com/asl/
- */
+// Author: Chris Hui
+// Site: https://www.chrishui.co.uk/
 
 /* 
 * This is an example skill that lets users schedule an appointment with the skill owner.
@@ -14,25 +9,143 @@
 * with calendaring to check free/busy times.
 */
 
+/* SETUP CODE AND CONSTANTS */
+
 const Alexa = require('ask-sdk-core');
 const AWS = require('aws-sdk');
 const dotenv = require('dotenv');
 const i18n = require('i18next');
 const sprintf = require('i18next-sprintf-postprocessor');
-const luxon = require('luxon');
-const ics = require('ics');
+const luxon = require('luxon'); // Dates and times
+const ics = require('ics'); // ICS file format for iCalender
 const { google } = require('googleapis');
-const sgMail = require('@sendgrid/mail');
+const sgMail = require('@sendgrid/mail'); // send emails
 require('dotenv').config();
 
-/* CONSTANTS */
+const SKILL_NAME = "Alfred scheduler";
+const GENERAL_REPROMPT = "What would you like to do";
+
+// TODO
 // To set constants, change the value in .env.sample then
 // rename .env.sample to just .env
 
 /* LANGUAGE STRINGS */
 const languageStrings = require('./languages/languageStrings');
 
-/* HANDLERS */
+/* INTENT HANDLERS */
+
+const LaunchRequestHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
+  },
+  handle(handlerInput) {
+    let speechText = `Hi, welcome to ${SKILL_NAME}, Would you like to schedule an appointment?`;
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .reprompt(GENERAL_REPROMPT)
+      .getResponse();
+  }
+};
+
+const HelpIntentHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return (
+      request.type === "IntentRequest" &&
+      request.intent.name === "AMAZON.HelpIntent"
+      );
+  },
+  handle(handlerInput) {
+    let speechText = "I can help you schedule an appointment. Would you like to schedule an appointment?";
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .reprompt(GENERAL_REPROMPT)
+      .getResponse();
+  },
+};
+
+const YesIntentHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return (
+      request.type === "IntentRequest" &&
+      request.intent.name === "AMAZON.YesIntent"
+      );
+  },
+  handle(handlerInput) {
+    let speechText = "Okay, let\'s schedule an appointment."
+    return handlerInput.responseBuilder
+      .addDelegateDirective({
+        name: 'ScheduleAppointmentIntent',
+        confirmationStatus: 'NONE',
+        slots: {},
+      })
+      .speak(speechText)
+      .getResponse();
+  },
+};
+
+const NoIntentHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return (
+      request.type === "IntentRequest" &&
+      request.intent.name === "AMAZON.NoIntent"
+      );
+  },
+  handle(handlerInput) {
+    let speechText = "Okay, let me know if you would like to schedule an appointment."
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .getResponse();
+  },
+};
+
+const SessionEndedRequestHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
+  },
+  handle(handlerInput) {
+    console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`);
+
+    return handlerInput.responseBuilder.getResponse();
+  },
+};
+
+const ErrorHandler = {
+  canHandle() {
+    return true;
+  },
+  handle(handlerInput, error) {
+    console.log(`Error request: ${JSON.stringify(handlerInput.requestEnvelope.request)}`);
+    console.log(`Error handled: ${error.message}`);
+    return handlerInput.responseBuilder
+      .speak("Sorry, I am unable to understand. Please try again.")
+      .getResponse();
+  }
+};
+
+// This function is used for testing and debugging. It will echo back an
+// intent name for an intent that does not have a suitable intent handler.
+// a respond from this function indicates an intent handler function should
+// be created or modified to handle the user's intent.
+const IntentReflectorHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest';
+  },
+  handle(handlerInput) {
+    let intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
+    let speechText = `You just triggered ${intentName}`;
+
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .getResponse();
+  },
+};
+
+// TODO (Above sorted on 2nd June)
+
+
 
 // This handler responds when required environment variables
 // missing or a .env file has not been created.
@@ -91,23 +204,6 @@ const InvalidPermissionsHandler = {
         // throw an error if the permission is not defined
         throw new Error(`${attributes.permissionsError} is not a known permission`);
     }
-  },
-};
-
-const LaunchRequestHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
-  },
-  handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-
-    const speakOutput = requestAttributes.t('GREETING', requestAttributes.t('SKILL_NAME'));
-    const repromptOutput = requestAttributes.t('GREETING_REPROMPT');
-
-    return handlerInput.responseBuilder
-      .speak(speakOutput)
-      .reprompt(repromptOutput)
-      .getResponse();
   },
 };
 
@@ -337,130 +433,7 @@ const CheckAvailabilityIntentHandler = {
   },
 };
 
-// This handler is used to handle 'yes' utternaces
-const YesIntentHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.YesIntent';
-  },
-  handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
 
-    const speakOutput = requestAttributes.t('SCHEDULE_YES');
-
-    return handlerInput.responseBuilder
-      .addDelegateDirective({
-        name: 'ScheduleAppointmentIntent',
-        confirmationStatus: 'NONE',
-        slots: {},
-      })
-      .speak(speakOutput)
-      .getResponse();
-  },
-};
-
-// This handler is used to handle 'no' utternaces
-const NoIntentHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.NoIntent';
-  },
-  handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-    const speakOutput = requestAttributes.t('SCHEDULE_NO');
-
-    return handlerInput.responseBuilder
-      .speak(speakOutput)
-      .getResponse();
-  },
-};
-
-const HelpIntentHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
-  },
-  handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-
-    const speakOutput = requestAttributes.t('HELP');
-    const repromptOutput = requestAttributes.t('HELP_REPROMPT');
-
-    return handlerInput.responseBuilder
-      .speak(speakOutput)
-      .reprompt(repromptOutput)
-      .getResponse();
-  },
-};
-
-const CancelAndStopIntentHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && (handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent'
-        || handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent');
-  },
-  handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-
-    const speakOutput = requestAttributes.t('CANCEL_STOP_RESPONSE');
-
-    return handlerInput.responseBuilder
-      .speak(speakOutput)
-      .getResponse();
-  },
-};
-
-const SessionEndedRequestHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
-  },
-  handle(handlerInput) {
-    console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`);
-
-    return handlerInput.responseBuilder.getResponse();
-  },
-};
-
-// This function handles syntax or routing errors. If you receive an error
-// stating the request handler chain is not found, you have not implemented
-// a handler for the intent or included it in the skill builder below
-const ErrorHandler = {
-  canHandle() {
-    return true;
-  },
-  handle(handlerInput, error) {
-    console.log(`Error Request: ${JSON.stringify(handlerInput.requestEnvelope.request)}`);
-    console.log(`Error handled: ${error.message}`);
-
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-    const speakOutput = requestAttributes.t('ERROR');
-    const repromptOutput = requestAttributes.t('ERROR_REPROMPT');
-
-    return handlerInput.responseBuilder
-      .speak(speakOutput)
-      .reprompt(repromptOutput)
-      .getResponse();
-  },
-};
-
-// This function is used for testing and debugging. It will echo back an
-// intent name for an intent that does not have a suitable intent handler.
-// a respond from this function indicates an intent handler function should
-// be created or modified to handle the user's intent.
-const IntentReflectorHandler = {
-  canHandle(handlerInput) {
-    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest';
-  },
-  handle(handlerInput) {
-    const intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
-    const speakOutput = `You just triggered ${intentName}`;
-
-    return handlerInput.responseBuilder
-      .speak(speakOutput)
-    // .reprompt('add a reprompt if you want to keep the session open for the user to respond')
-      .getResponse();
-  },
-};
 
 /* INTERCEPTORS */
 
@@ -737,7 +710,6 @@ exports.handler = Alexa.SkillBuilders.custom()
     YesIntentHandler,
     NoIntentHandler,
     HelpIntentHandler,
-    CancelAndStopIntentHandler,
     SessionEndedRequestHandler,
     IntentReflectorHandler,
   )
