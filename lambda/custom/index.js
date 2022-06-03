@@ -306,7 +306,7 @@ const CompletedScheduleAppointmentIntentHandler = {
     handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
     await bookAppointment(handlerInput);// Schedule appointment
 
-    let speechText = "Your appointment with has been scheduled and you will recieve an email confirmation. Thank you.";
+    let speechText = "Your appointment has been scheduled and you will recieve an email confirmation. Thank you.";
     return handlerInput.responseBuilder
       .speak(speechText)
       .getResponse();
