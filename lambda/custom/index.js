@@ -460,39 +460,34 @@ function bookAppointment(handlerInput) {
 
       s3.putObject(s3Params, () => {
         // send email to user
+        console.log('DEGUB ' + typeof process.env.SEND_EMAIL)
+        const attachment = Buffer.from(icsData.value);
         
-        if ( process.env.SEND_EMAIL === 'true' ) {
-          console.log('DEGUB ' + typeof process.env.SEND_EMAIL)
-          const attachment = Buffer.from(icsData.value);
-          
-          const msg = {
-            to: [process.env.NOTIFY_EMAIL, appointmentData.profileEmail],
-            from: process.env.FROM_EMAIL,
-            subject: requestAttributes.t('EMAIL_SUBJECT', appointmentData.profileName, process.env.FROM_NAME),
-            text: requestAttributes.t('EMAIL_TEXT',
-              appointmentData.profileName,
-              process.env.FROM_NAME,
-              appointmentData.profileMobileNumber),
-            attachments: [
-              {
-                content: attachment.toString('base64'),
-                filename: 'appointment.ics',
-                type: 'text/calendar',
-                disposition: 'attachment',
-              },
-            ],
-          };
-  
-          sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-          sgMail.send(msg).then((result) => {
-            // mail done sending
-            resolve(result);
-          });
-          
-        } else {
-          resolve(true);
-        }
-      });
+        const msg = {
+          to: [process.env.NOTIFY_EMAIL, appointmentData.profileEmail],
+          from: process.env.FROM_EMAIL,
+          subject: requestAttributes.t('EMAIL_SUBJECT', appointmentData.profileName, process.env.FROM_NAME),
+          text: requestAttributes.t('EMAIL_TEXT',
+            appointmentData.profileName,
+            process.env.FROM_NAME,
+            appointmentData.profileMobileNumber),
+          attachments: [
+            {
+              content: attachment.toString('base64'),
+              filename: 'appointment.ics',
+              type: 'text/calendar',
+              disposition: 'attachment',
+            },
+          ],
+        };
+
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        sgMail.send(msg).then((result) => {
+          // mail done sending
+          resolve(result);
+        });   
+        } 
+      );
     } catch (ex) {
       console.log(`bookAppointment() ERROR: ${ex.message}`);
       reject(ex);
