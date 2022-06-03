@@ -143,27 +143,18 @@ const IntentReflectorHandler = {
   },
 };
 
-// TODO (Above sorted on 2nd June)
-
-
-
 // This handler responds when required environment variables
 // missing or a .env file has not been created.
 const InvalidConfigHandler = {
   canHandle(handlerInput) {
     const attributes = handlerInput.attributesManager.getRequestAttributes();
-
     const invalidConfig = attributes.invalidConfig || false;
-
     return invalidConfig;
   },
   handle(handlerInput) {
-    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-
-    const speakOutput = requestAttributes.t('ENV_NOT_CONFIGURED');
-
+    let speechText = "The environment variables are not set";
     return handlerInput.responseBuilder
-      .speak(speakOutput)
+      .speak(speechText)
       .getResponse();
   },
 };
@@ -173,7 +164,6 @@ const InvalidConfigHandler = {
 const InvalidPermissionsHandler = {
   canHandle(handlerInput) {
     const attributes = handlerInput.attributesManager.getRequestAttributes();
-
     return attributes.permissionsError;
   },
   handle(handlerInput) {
@@ -182,23 +172,19 @@ const InvalidPermissionsHandler = {
     switch (attributes.permissionsError) {
       case 'no_name':
         return handlerInput.responseBuilder
-          .speak(attributes.t('NAME_REQUIRED'))
-          .withSimpleCard(attributes.t('SKILL_NAME'), attributes.t('NAME_REQUIRED_REPROMPT'))
+          .speak("Your name is not set on the Alexa app.")
           .getResponse();
       case 'no_email':
         return handlerInput.responseBuilder
-          .speak(attributes.t('EMAIL_REQUIRED'))
-          .withSimpleCard(attributes.t('SKILL_NAME'), attributes.t('EMAIL_REQUIRED_REPROMPT'))
+          .speak("Your email is not set on the Alexa app.")
           .getResponse();
       case 'no_phone':
         return handlerInput.responseBuilder
-          .speak(attributes.t('PHONE_REQUIRED'))
-          .withSimpleCard(attributes.t('SKILL_NAME'), attributes.t('PHONE_REQUIRED_REPROMPT'))
+          .speak("Your phone is not set on the Alexa app")
           .getResponse();
       case 'permissions_required':
         return handlerInput.responseBuilder
-          .speak(attributes.t('PERMISSIONS_REQUIRED', attributes.t('SKILL_NAME')))
-          .withAskForPermissionsConsentCard(['alexa::profile:email:read', 'alexa::profile:name:read', 'alexa::profile:mobile_number:read'])
+          .speak("Your profile currently does not allow permission to access name, email, and phone")
           .getResponse();
       default:
         // throw an error if the permission is not defined
