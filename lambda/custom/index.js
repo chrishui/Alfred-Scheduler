@@ -412,7 +412,7 @@ function bookAppointment(handlerInput) {
     const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
 
     try {
-      const appointmentData = sessionAttributes.appointmentData; // appointment data from session
+      const appointmentData = sessionAttributes.appointmentData; // Appointment data from session
       const userTime = luxon.DateTime.fromISO(appointmentData.appointmentDateTime,
         { zone: appointmentData.userTimezone });
       const userTimeUtc = userTime.setZone('utc');
@@ -510,7 +510,6 @@ exports.handler = Alexa.SkillBuilders.custom()
     InvalidConfigHandler,
     InvalidPermissionsHandler,
     LaunchRequestHandler,
-    CheckAvailabilityIntentHandler,
     StartedInProgressScheduleAppointmentIntentHandler,
     CompletedScheduleAppointmentIntentHandler,
     YesIntentHandler,
