@@ -11,14 +11,14 @@
 
 /* SETUP CODE AND CONSTANTS */
 
-const Alexa = require('ask-sdk-core');
-const AWS = require('aws-sdk');
-const dotenv = require('dotenv');
-const i18n = require('i18next');
-const sprintf = require('i18next-sprintf-postprocessor');
-const luxon = require('luxon'); // Dates and times
-const ics = require('ics'); // ICS file format for iCalender
-const sgMail = require('@sendgrid/mail'); // send emails
+var Alexa = require('ask-sdk-core');
+var AWS = require('aws-sdk');
+var dotenv = require('dotenv');
+var i18n = require('i18next');
+var sprintf = require('i18next-sprintf-postprocessor');
+var luxon = require('luxon'); // Dates and times
+var ics = require('ics'); // ICS file format for iCalender
+var sgMail = require('@sendgrid/mail'); // send emails
 require('dotenv').config();
 
 const SKILL_NAME = "Alfred scheduler";
