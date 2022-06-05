@@ -18,7 +18,6 @@ const i18n = require('i18next');
 const sprintf = require('i18next-sprintf-postprocessor');
 const luxon = require('luxon'); // Dates and times
 const ics = require('ics'); // ICS file format for iCalender
-const { google } = require('googleapis');
 const sgMail = require('@sendgrid/mail'); // send emails
 require('dotenv').config();
 
