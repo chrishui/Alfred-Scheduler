@@ -1,5 +1,5 @@
 {
-  "name": "alexa-appointment-scheduling-skill",
+  "name": "alexa-scheduler",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "Dabble Lab",
+  "author": "Chris Hui",
   "license": "ISC",
   "dependencies": {
     "ask-sdk-core": "^2.6.0",
