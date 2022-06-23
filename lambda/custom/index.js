@@ -360,9 +360,6 @@ const PermissionsCheckInterceptor = {
 };
 
 // This interceptor function is used for localization.
-// It uses the i18n module, along with defined language
-// string to return localized content. It defaults to 'en'
-// if it can't find a matching language.
 const LocalizationInterceptor = {
   process(handlerInput) {
     const { requestEnvelope, attributesManager } = handlerInput;
