@@ -2,10 +2,10 @@
 // Site: https://www.chrishui.co.uk/
 
 /* 
-* This is an example skill that lets users schedule an appointment with the skill owner.
+* This is a custom skill that lets users schedule an appointment with the skill owner.
 * Users can choose a date and time to book an appointment that is then emailed to the skill owner.
 * This skill uses the ASK SDK 2.0 demonstrates the use of dialogs, getting a users email, name,
-* and mobile phone fro the the settings api, along with sending email from a skill and integrating
+* and mobile phone from the the settings api, along with sending email from a skill and integrating
 * with calendaring to check free/busy times.
 */
 
