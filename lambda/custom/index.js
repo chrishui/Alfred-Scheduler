@@ -24,10 +24,6 @@ require('dotenv').config();
 const SKILL_NAME = "Alfred scheduler";
 const GENERAL_REPROMPT = "What would you like to do";
 
-// TODO
-// To set constants, change the value in .env.sample then
-// rename .env.sample to just .env
-
 /* LANGUAGE STRINGS */
 const languageStrings = require('./languages/languageStrings');
 
